@@ -2,26 +2,31 @@ import * as DB from './db.js';
 import {importFile} from './importer.js';
 import {next,label,steps,MIN,DAY,DEF} from './scheduler.js';
 import {renderCard,loadMedia,BASE} from './render.js';
+import {buildTree,subPaths,prefixes,excluder,suspendEntries,resumeEntries} from './tags.js';
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const view=$('#view'),shadow=$('#host').attachShadow({mode:'open'});
 const freshSet=()=>({excluded:[],lock:true,opts:{g:{...DEF},d:{}}});
 let col=null,set=freshSet(),stats={days:{},rev:{}},tab='decks',sess=null,urls=[],sel=new Set(),tq='';
-const collapsed=new Set();
+const collapsed=new Set(),tOpen=new Set();
+let disp={},exFn=null,TT=null;                       // tag display names, exclusion matcher cache, current tag tree
 
 async function load(){
   col=await DB.get('kv','col');
   const sv=await DB.get('kv','settings')||{};
-  set=Object.assign(freshSet(),sv);
+  set=Object.assign(freshSet(),sv);exFn=null;sel.clear();
   if(!sv.opts&&sv.newPerDay!=null)set.opts.g.newPerDay=sv.newPerDay;      // migrate old single setting
   stats=await DB.get('kv','stats')||{days:{},rev:{}};
   if(col){const st=await DB.all('state');
-    col.cards.forEach(c=>{if(st[c.id])Object.assign(c,st[c.id]);c._t=(col.notes[c.nid]?.t||'').trim().split(/\s+/).filter(Boolean);});}
+    col.cards.forEach(c=>{if(st[c.id])Object.assign(c,st[c.id]);c._t=ntags(c.nid);});
+    disp={};for(const n of Object.values(col.notes))for(const t of n.t.trim().split(/\s+/))if(t)prefixes(t).forEach(p=>{const l=p.toLowerCase();if(!(l in disp))disp[l]=p;});}
 }
 const saveSet=()=>DB.put('kv','settings',set);
 const pick=c=>({type:c.type,due:c.due,ivl:c.ivl,ease:c.ease,reps:c.reps,lapses:c.lapses,step:c.step,ft:c.ft});
-const active=c=>!c.susp&&!c._t.some(t=>set.excluded.includes(t));
+const ntags=nid=>{const n=col.notes[nid];return n?(n._t||(n._t=n.t.trim().split(/\s+/).filter(Boolean).map(t=>t.toLowerCase()))):[];};
+const isEx=t=>(exFn||(exFn=excluder(set.excluded)))(t);
+const active=c=>!c.susp&&!c._t.some(isEx);
 const kind=(c,now,eod)=>c.type===0?'n':c.type===2?(c.due<=eod?'r':''):(c.due<=now+20*MIN?'l':'');
 const shuffle=a=>{for(let i=a.length;i>1;){const j=Math.random()*i--|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 const times=()=>{const eod=new Date().setHours(24,0,0,0);return{now:Date.now(),eod,sod:eod-DAY};};
@@ -116,24 +121,38 @@ function openOpts(scope){                       // scope: null = global, else de
 }
 $('#gear').onclick=()=>openOpts(null);
 
-// ---------- tags ----------
-function tagList(){
-  const m={};col.cards.forEach(c=>{if(!c.susp)c._t.forEach(t=>m[t]=(m[t]||0)+1);});
-  const ts=Object.keys(m).filter(t=>t.toLowerCase().includes(tq)).sort();
-  return ts.map(t=>`<label class="trow"><input type="checkbox" data-sel="${esc(t)}" ${sel.has(t)?'checked':''}><span class="tn">${esc(t)}</span>${set.excluded.includes(t)?'<em>suspended</em>':''}<span class="cnt">${m[t]}</span></label>`).join('')||'<p class="empty">No tags</p>';
+// ---------- tags (hierarchical tree) ----------
+function tagRows(){
+  const vis=n=>!tq||n.path.includes(tq)||n.kids.some(vis);
+  const row=(n,d)=>{
+    if(!vis(n))return'';
+    const open=tq?true:tOpen.has(n.path),ps=subPaths(TT.nodes,n.path),k=ps.filter(p=>sel.has(p)).length,full=k===ps.length;
+    return `<div class="trow" style="padding-left:${4+d*20}px"><button class="chev" data-ttog="${esc(n.path)}" aria-label="Expand">${n.kids.length?(open?'▼':'▶'):''}</button>
+    <label class="tl"><input type="checkbox" data-sel="${esc(n.path)}"${full?' checked':''}${k&&!full?' data-ind':''}><span class="tn">${esc(n.name)}</span></label>${isEx(n.path)?'<em>suspended</em>':''}<span class="cnt">${n.n}</span></div>`
+      +(n.kids.length&&open?n.kids.map(c=>row(c,d+1)).join(''):'');};
+  return TT.roots.map(n=>row(n,0)).join('')||'<p class="empty">No tags</p>';
+}
+function paintTags(){
+  $('#tl').innerHTML=tagRows();
+  $('#tl').querySelectorAll('input[data-ind]').forEach(i=>i.indeterminate=true);
+  const m=col.cards.filter(c=>!c.susp&&c._t.some(t=>sel.has(t))).length;
+  $('#sc').textContent=sel.size?`${[...sel].filter(p=>TT.nodes[p]).length} tags · ${m} cards selected`:'Tap a tag to select it and all its subtags';
 }
 function vTags(){
   if(!col)return view.innerHTML=`<p class="empty">Import a deck first.</p>`;
-  view.innerHTML=`<input type="search" id="tq" placeholder="Search tags" value="${esc(tq)}"><div id="tl">${tagList()}</div>
-  <div class="actions"><button data-act="study">Study due</button><button data-act="cram">Cram all</button><button data-act="susp">Suspend</button><button data-act="resume">Resume</button></div>`;
+  TT=buildTree(col.cards,disp);
+  view.innerHTML=`<div class="tbar"><input type="search" id="tq" placeholder="Search tags" value="${esc(tq)}"><button data-tall="1">Expand</button><button data-tall="0">Collapse</button></div><div id="tl"></div>
+  <div class="tsticky"><div id="sc" class="hint"></div><div class="actions"><button data-act="study">Study due</button><button data-act="cram">Cram all</button><button data-act="susp">Suspend</button><button data-act="resume">Resume</button></div></div>`;
+  paintTags();
 }
 async function tagAct(a){
-  const s=[...sel];if(!s.length)return toast('Select one or more tags first.');
-  if(a==='susp'||a==='resume'){   // suspended tags are hidden from every deck's review queue (reversible)
-    set.excluded=a==='susp'?[...new Set([...set.excluded,...s])]:set.excluded.filter(t=>!s.includes(t));
-    await saveSet();return vTags();}
-  const cs=col.cards.filter(c=>!c.susp&&c._t.some(t=>s.includes(t))),{now,eod}=times();
-  a==='cram'?start(shuffle(cs),'Cram: '+s.join(', '),true):start(build(cs,now,eod),'Tags: '+s.join(', '),false);
+  if(!sel.size)return toast('Select one or more tags first.');
+  if(a==='susp'||a==='resume'){   // suspended tags are hidden from every deck's review queue (reversible); parents cover all subtags
+    set.excluded=a==='susp'?[...new Set([...set.excluded.map(e=>e.toLowerCase()),...suspendEntries(TT.nodes,sel)])]:resumeEntries(TT.nodes,set.excluded,sel);
+    exFn=null;await saveSet();paintTags();return toast(a==='susp'?'Tags suspended (incl. subtags)':'Tags resumed');}
+  const cs=col.cards.filter(c=>!c.susp&&c._t.some(t=>sel.has(t))),{now,eod}=times();
+  const top=suspendEntries(TT.nodes,sel).map(e=>disp[e.replace(/::\*$/,'')]||e.replace(/::\*$/,'')),title='Tags: '+top.slice(0,2).join(', ')+(top.length>2?` +${top.length-2}`:'');
+  a==='cram'?start(shuffle(cs),title,true):start(build(cs,now,eod),title,false);
 }
 
 // ---------- import (merges into the existing collection) ----------
@@ -224,11 +243,14 @@ function render(){
   ({decks:vDecks,tags:vTags,imp:vImport})[tab]();
 }
 $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;render();}};
-view.addEventListener('click',e=>{const b=e.target.closest('[data-tog],[data-study],[data-act],[data-opt]');if(!b)return;const d=b.dataset;
+view.addEventListener('click',e=>{const b=e.target.closest('[data-tog],[data-study],[data-act],[data-opt],[data-ttog],[data-tall]');if(!b)return;const d=b.dataset;
   if(d.tog){collapsed.has(d.tog)?collapsed.delete(d.tog):collapsed.add(d.tog);vDecks();}
-  else if(d.study)startDeck(d.study);else if(d.act)tagAct(d.act);else if(d.opt)openOpts(d.opt);});
-view.addEventListener('change',e=>{const t=e.target.dataset.sel;if(t!=null)e.target.checked?sel.add(t):sel.delete(t);});
-view.addEventListener('input',e=>{if(e.target.id==='tq'){tq=e.target.value.toLowerCase();$('#tl').innerHTML=tagList();}});
+  else if(d.study)startDeck(d.study);else if(d.act)tagAct(d.act);else if(d.opt)openOpts(d.opt);
+  else if(d.ttog){tOpen.has(d.ttog)?tOpen.delete(d.ttog):tOpen.add(d.ttog);paintTags();}
+  else if(d.tall!=null){tOpen.clear();if(d.tall==='1')Object.values(TT.nodes).forEach(n=>n.kids.length&&tOpen.add(n.path));paintTags();}});
+view.addEventListener('change',e=>{const p=e.target.dataset.sel;if(p==null)return;   // ticking a parent (un)selects every subtag
+  subPaths(TT.nodes,p).forEach(x=>e.target.checked?sel.add(x):sel.delete(x));paintTags();});
+view.addEventListener('input',e=>{if(e.target.id==='tq'){tq=e.target.value.toLowerCase();paintTags();}});
 (async()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.warn);
   navigator.storage?.persist?.();

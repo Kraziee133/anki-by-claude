@@ -48,3 +48,8 @@ input[type=search],input[type=text],input[type=number]{font-size:16px;width:100%
 .actions2 button{flex:1;border-radius:12px;background:var(--card);min-height:48px}.actions2 .pri{background:var(--ac);color:#fff}
 #toast{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:30;display:flex;align-items:center;gap:8px;background:#1c1c1e;color:#fff;border-radius:14px;padding:6px 8px 6px 16px;box-shadow:0 4px 20px #0006}
 #toast span{flex:1;font-size:14px}#toast button{color:#8ab4ff;min-height:40px;padding:0 10px}
+
+.tbar{display:flex;gap:6px;align-items:center;margin-bottom:6px}.tbar input{flex:1}.tbar button{color:var(--ac);font-size:14px;padding:0 8px}
+.trow{padding-right:12px;gap:0}.trow .chev{width:36px;min-width:36px;color:var(--mut);font-size:13px}
+.trow .tl{flex:1;display:flex;align-items:center;gap:10px;min-height:48px;overflow:hidden}.trow .tn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow em{margin:0 8px}.tsticky{position:sticky;bottom:0;background:var(--bg);padding-top:6px}.tsticky .actions{position:static}.tsticky .hint{margin:0 4px 2px}
