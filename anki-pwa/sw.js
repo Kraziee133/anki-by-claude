@@ -1,5 +1,5 @@
 // Bump V on every deploy so clients pick up new files.
-const V='anki-v3';
+const V='anki-v4';
 const SHELL=['./','index.html','manifest.json','css/app.css','js/app.js','js/db.js','js/importer.js','js/scheduler.js','js/render.js','icons/icon-180.png','icons/icon-192.png','icons/icon-512.png'];
 const CDN=['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js',

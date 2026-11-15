@@ -34,3 +34,17 @@ input[type=search],input[type=text],input[type=number]{font-size:16px;width:100%
 #btns small{font-weight:400;color:var(--mut);font-size:12px}
 #btns .show{background:var(--ac);color:#fff;min-height:56px;font-size:17px}
 #btns .r1{color:#dc2626}#btns .r2{color:#d97706}#btns .r3{color:#16a34a}#btns .r4{color:#2563eb}
+
+#bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}#bt{flex:1}
+#gear{font-size:22px;color:var(--ac)}#badge:empty{display:none}#badge{flex-basis:100%;order:3}
+#badge span{display:inline-block;background:var(--card);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
+.deck .og{color:var(--mut);font-size:18px;min-width:40px}
+#lock{font-size:13px;color:var(--ac);padding:0 8px;min-width:0;white-space:nowrap}
+#modal{position:fixed;inset:0;z-index:20;background:#0008;display:flex;align-items:flex-end;justify-content:center;padding:env(safe-area-inset-top) 0 0}
+#modal[hidden],#toast[hidden]{display:none}
+.sheet{width:100%;max-width:560px;max-height:92%;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.sheet h2{margin:0 0 8px;font-size:20px}.fld{display:flex;align-items:center;gap:12px;min-height:48px}.fld span{flex:1}.fld input{width:130px;text-align:right}
+.hint{color:var(--mut);font-size:13px}.actions2{display:flex;gap:8px;position:sticky;bottom:0}
+.actions2 button{flex:1;border-radius:12px;background:var(--card);min-height:48px}.actions2 .pri{background:var(--ac);color:#fff}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:30;display:flex;align-items:center;gap:8px;background:#1c1c1e;color:#fff;border-radius:14px;padding:6px 8px 6px 16px;box-shadow:0 4px 20px #0006}
+#toast span{flex:1;font-size:14px}#toast button{color:#8ab4ff;min-height:40px;padding:0 10px}

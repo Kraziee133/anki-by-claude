@@ -10,3 +10,4 @@ export const clear=s=>tx(s,'readwrite',o=>o.clear());
 export const putMany=(s,e)=>tx(s,'readwrite',o=>{e.forEach(([k,v])=>o.put(v,k));});
 export const all=async s=>{const d=await open();return new Promise(res=>{const out={},r=d.transaction(s).objectStore(s).openCursor();
   r.onsuccess=()=>{const c=r.result;if(c){out[c.key]=c.value;c.continue();}else res(out);};});};
+export const keys=s=>tx(s,'readonly',o=>o.getAllKeys());

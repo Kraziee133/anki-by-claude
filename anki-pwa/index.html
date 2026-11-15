@@ -14,11 +14,12 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
 <script type="module" src="js/app.js"></script>
 </head><body>
-<div id="app"><header id="bar"></header><main id="view"></main>
+<div id="app"><header id="bar"><span id="bt"></span><button id="gear" aria-label="Scheduler options">⚙︎</button><div id="badge"></div></header><main id="view"></main>
 <nav id="tabs"><button data-t="decks">Decks</button><button data-t="tags">Tags</button><button data-t="imp">Import</button></nav></div>
 <div id="rv" hidden>
-  <div id="rh"><button id="back">‹ Back</button><span id="rt"></span><span id="rc"></span></div>
+  <div id="rh"><button id="back">‹ Back</button><span id="rt"></span><button id="lock"></button><span id="rc"></span></div>
   <div id="pane"><div id="host"></div></div>
   <div id="btns"></div>
 </div>
+<div id="modal" hidden></div><div id="toast" hidden></div>
 </body></html>

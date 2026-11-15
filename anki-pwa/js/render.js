@@ -5,7 +5,7 @@ const cloze=(t,n,ans)=>t.replace(/\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g,
 const snd=h=>h.replace(/\[sound:([^\]]+)\]/g,(m,n)=>`<audio controls data-m="${n.replace(/"/g,'&quot;')}"></audio>`);
 export const BASE=`*{box-sizing:border-box}.card{font:20px/1.45 -apple-system,system-ui,sans-serif;text-align:center;padding:18px;overflow-wrap:anywhere}
 img,video,canvas,svg{max-width:100%!important;height:auto!important}table{max-width:100%}audio{max-width:100%}.cloze{font-weight:700;color:#2563eb}
-hr{border:0;border-top:1px solid #8884}pre,code{white-space:pre-wrap}`;
+a{-webkit-touch-callout:none;-webkit-user-drag:none}hr{border:0;border-top:1px solid #8884}pre,code{white-space:pre-wrap}`;
 // Renders question/answer HTML for a card from its Anki model templates.
 export function renderCard(c,note,model,deck){
   const isC=model.type===1,t=isC?model.tmpls[0]:(model.tmpls.find(x=>x.ord===c.ord)||model.tmpls[0]);
