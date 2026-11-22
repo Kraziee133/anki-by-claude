@@ -28,7 +28,7 @@ input[type=search],input[type=text],input[type=number]{font-size:16px;width:100%
 #rv[hidden]{display:none}
 #rh{display:flex;align-items:center;justify-content:space-between;padding:0 8px}#rh #rt{flex:1;text-align:center;color:var(--mut);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #back{color:var(--ac)}#rc{min-width:44px;text-align:right;color:var(--mut)}
-#pane{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;margin:4px 10px;background:var(--card);border-radius:16px;-webkit-user-select:text;user-select:text}
+#pane{flex:1;min-height:0;position:relative;z-index:1;isolation:isolate;contain:paint;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;margin:4px 10px;background:var(--card);border-radius:16px;-webkit-user-select:text;user-select:text}
 #btns{display:flex;gap:8px;padding:8px 10px}
 #btns button{flex:1;min-height:60px;border-radius:14px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600}
 #btns small{font-weight:400;color:var(--mut);font-size:12px}
@@ -53,3 +53,5 @@ input[type=search],input[type=text],input[type=number]{font-size:16px;width:100%
 .trow{padding-right:12px;gap:0}.trow .chev{width:36px;min-width:36px;color:var(--mut);font-size:13px}
 .trow .tl{flex:1;display:flex;align-items:center;gap:10px;min-height:48px;overflow:hidden}.trow .tn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .trow em{margin:0 8px}.tsticky{position:sticky;bottom:0;background:var(--bg);padding-top:6px}.tsticky .actions{position:static}.tsticky .hint{margin:0 4px 2px}
+#btns{position:relative;z-index:50;background:var(--bg)}
+#rh{position:relative;z-index:50}

@@ -182,7 +182,7 @@ async function doImport(files){
 
 // ---------- review ----------
 const syncLock=()=>{$('#lock').textContent='Lock Links: '+(set.lock?'ON':'OFF');};
-$('#lock').onclick=async()=>{set.lock=!set.lock;syncLock();await saveSet();
+$('#lock').onclick=async()=>{set.lock=!set.lock;syncLock();shadow.querySelector('.card-content')?.classList.toggle('locked',set.lock);await saveSet();
   toast(set.lock?'Links locked: taps flip the card':'Links unlocked: tapping a link will ask first');};
 function start(q,title,cram){
   if(!q.length)return toast('Nothing to study right now.');
@@ -200,7 +200,7 @@ async function draw(){
   if(!m)return nextCard();
   const r=renderCard(c,n,m,dn),o=optsFor(dn);
   urls.splice(0).forEach(URL.revokeObjectURL);
-  shadow.innerHTML=`<style>${BASE}${r.css}</style><div class="card">${sess.ans?r.a:r.q}</div>`;
+  shadow.innerHTML=`<style>${BASE}${r.css}</style><div class="card card-content${set.lock?' locked':''}">${sess.ans?r.a:r.q}</div>`;
   shadow.querySelectorAll('a[href]').forEach(a=>{a.target='_blank';a.rel='noopener noreferrer';});
   $('#pane').scrollTop=0;
   $('#btns').innerHTML=sess.ans?[1,2,3,4].map(i=>`<button class="r${i}" data-r="${i}"><small>${sess.cram?'':label(next(c,i,o).due-Date.now())}</small>${['Again','Hard','Good','Easy'][i-1]}</button>`).join('')
